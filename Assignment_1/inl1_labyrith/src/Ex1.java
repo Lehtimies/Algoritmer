@@ -93,7 +93,11 @@ class MazeComponent extends JComponent {
     private void createMaze (int cells, Graphics g) {
         int totalCells = cells * cells;
         int [] maze = DisjunctSets(totalCells);
+        int [] handledCells = new int [totalCells];
 
+        while (true) {
+            int randomCell = getRandomCell(maze);
+        }
 
     }
 
@@ -105,11 +109,12 @@ class MazeComponent extends JComponent {
         return cellArray;
     }
 
-    /*
-    private int chooseRandomCell(int[] cellArray) {
-        
+
+    private int getRandomCell(int[] cellArray) {
+    Random random = new Random();
+    return random.nextInt(cellArray.length);
     }
-    */
+
 
     // Paints the interior of the cell at postion x,y with colour c
     private void paintCell(int x, int y, Color c, Graphics g) {
