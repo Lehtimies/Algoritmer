@@ -8,6 +8,7 @@ import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Random;
 
 
@@ -91,30 +92,104 @@ class MazeComponent extends JComponent {
     }
 
     private void createMaze (int cells, Graphics g) {
+        random = new Random();
         int totalCells = cells * cells;
-        int [] maze = DisjunctSets(totalCells);
-        int [] handledCells = new int [totalCells];
+        DisjunctSets maze = new DisjunctSets(totalCells);
 
         while (true) {
-            int randomCell = getRandomCell(maze);
+            int [] mazeArray = maze.getCellArray();
+            System.out.println(Arrays.toString(mazeArray));
+
+            int randomCell = getRandomCell(mazeArray);
+            System.out.println("random cell: " + randomCell);
+
+            if (randomCell == -1) {
+                break;
+            }
+
+            // Get cells adjacent to the randomCell
+            int cellToLeft = randomCell - 1;
+            int cellToRight = randomCell + 1;
+            int cellAbove = randomCell - cells;
+            int cellBelow = randomCell + cells;
+
+            // DEBUGGING
+            System.out.println("Cell to left: " + cellToLeft);
+            System.out.println("Cell to right: " + cellToRight);
+            System.out.println("Cell Above: " + cellAbove);
+            System.out.println("Cell Below: " + cellBelow);
+
+            // Get random wall (number between 0-3); 0 left, 1 up, 2 right, 3 down
+            int randomWall = random.nextInt(4);
+            System.out.println("randomWall: " + randomWall); // DEBUGGING
+
+            // Check if cell is outer cell and wall is outer wall
+            int xCoordinate = randomCell % cells;
+            int yCoordinate = randomCell / cells;
+
+            // DEBUGGING
+            System.out.println("x-coordinate: " + xCoordinate);
+            System.out.println("y-coordinate: " + yCoordinate);
+
+            // If outer wall then flip the wall to be removed
+            if (xCoordinate == 0 && randomWall == 0) {
+                randomWall = 2;
+            }
+            if (xCoordinate == cells-1 && randomWall == 2) {
+                randomWall = 0;
+            }
+            if (yCoordinate == 0 && randomWall == 1) {
+                randomWall = 3;
+            }
+            if (yCoordinate == cells-1 && randomWall == 3) {
+                randomWall = 1;
+            }
+
+            // Select adjacent cell based on wall direction
+            System.out.println("random wall (before switch case): " + randomWall);
+            switch (randomWall) {
+                case 0:
+                    int cellToLeftRoot = maze.find(cellToLeft);
+                    maze.union(cellToLeftRoot, randomCell);
+                    drawWall(xCoordinate, yCoordinate, randomWall, g);
+                    break;
+                case 1:
+                    int cellAboveRoot = maze.find(cellAbove);
+                    maze.union(cellAboveRoot, randomCell);
+                    drawWall(xCoordinate, yCoordinate, randomWall, g);
+                    break;
+                case 2:
+                    int cellToRightRoot = maze.find(cellToRight);
+                    maze.union(cellToRightRoot, randomCell);
+                    drawWall(xCoordinate, yCoordinate, randomWall, g);
+                    break;
+                case 3:
+                    int cellBelowRoot = maze.find(cellBelow);
+                    maze.union(cellBelowRoot, randomCell);
+                    drawWall(xCoordinate, yCoordinate, randomWall, g);
+                    break;
+            }
         }
 
     }
 
-    /* Initiera en disjunkt mängd */
-    private int[] DisjunctSets(int totalCells) {
-        int[] cellArray = new int[totalCells];
-        for (int i = 0; i < cellArray.length; i++)
-            cellArray[i] = -1;
-        return cellArray;
-    }
-
-
     private int getRandomCell(int[] cellArray) {
-    Random random = new Random();
-    return random.nextInt(cellArray.length);
+        random = new Random();
+        ArrayList<Integer> rootCell = new ArrayList<>();
+        for (int i = 0; i < cellArray.length; i++) {
+            if (cellArray[i] == -1) {
+                rootCell.add(i);
+            }
+        }
+        System.out.println("root cell: " + rootCell);
+        if (rootCell.isEmpty()) {
+            return -1;
+        }
+        int randomCellIndex = rootCell.get(random.nextInt(rootCell.toArray().length));
+        System.out.println("random cell index: " + randomCellIndex);
+        System.out.println("Value of index: " + cellArray[randomCellIndex]);
+        return randomCellIndex;
     }
-
 
     // Paints the interior of the cell at postion x,y with colour c
     private void paintCell(int x, int y, Color c, Graphics g) {
