@@ -17,7 +17,7 @@ public class Ex1 {
     private static final int WIDTH = 500;  // Size of the window in pixels
     private static final int HEIGHT = 500;
 
-    static int cells=20;    // The size of the maze is cells*cells (default is 20*20)
+    static int cells=50;    // The size of the maze is cells*cells (default is 20*20)
 
     public static void main(String[] args) {
 
@@ -94,16 +94,32 @@ class MazeComponent extends JComponent {
     private void createMaze (int cells, Graphics g) {
         random = new Random();
         int totalCells = cells * cells;
+
+        // Create a new disjunctSet for all the cells
         DisjunctSets maze = new DisjunctSets(totalCells);
 
         while (true) {
             int [] mazeArray = maze.getCellArray();
+            int randomCell = random.nextInt(mazeArray.length);
+            int randomCellRoot = maze.find(randomCell);
+
+            // DEBUGGING
             System.out.println(Arrays.toString(mazeArray));
+            System.out.println("randomCell: " + randomCell);
+            System.out.println("randomCellRoot " + randomCellRoot);
 
-            int randomCell = getRandomCell(mazeArray);
-            System.out.println("random cell: " + randomCell);
+            // Root list for debugging
+            ArrayList<Integer> rootCell = new ArrayList<>();
+            for (int i = 0; i < mazeArray.length; i++) {
+                if (mazeArray[i] < 0) {
+                    rootCell.add(i);
+                }
+            }
+            System.out.println("RootCellArray: " + rootCell);
 
-            if (randomCell == -1) {
+            // End process once everything is in one disjunctSet
+            if (maze.allConnected()) {
+                System.out.println("break due to all connected!");
                 break;
             }
 
@@ -145,50 +161,50 @@ class MazeComponent extends JComponent {
                 randomWall = 1;
             }
 
-            // Select adjacent cell based on wall direction
+            /* Select adjacent cell based on wall direction
+            If the selected cell and adjacent cell have the same root then break out of the switch case
+            and choose a new random cell */
             System.out.println("random wall (before switch case): " + randomWall);
             switch (randomWall) {
                 case 0:
                     int cellToLeftRoot = maze.find(cellToLeft);
-                    maze.union(cellToLeftRoot, randomCell);
+                    if (randomCellRoot == cellToLeftRoot) {
+                        break;
+                    }
+                    System.out.println("cellToLeftRoot: " + cellToLeftRoot);
+                    maze.union(cellToLeftRoot, randomCellRoot);
                     drawWall(xCoordinate, yCoordinate, randomWall, g);
                     break;
                 case 1:
                     int cellAboveRoot = maze.find(cellAbove);
-                    maze.union(cellAboveRoot, randomCell);
+                    if (randomCellRoot == cellAboveRoot) {
+                        break;
+                    }
+                    System.out.println("cellAboveRoot: " + cellAboveRoot);
+                    maze.union(cellAboveRoot, randomCellRoot);
                     drawWall(xCoordinate, yCoordinate, randomWall, g);
                     break;
                 case 2:
                     int cellToRightRoot = maze.find(cellToRight);
-                    maze.union(cellToRightRoot, randomCell);
+                    if (randomCellRoot == cellToRightRoot) {
+                        break;
+                    }
+                    System.out.println("cellToRightRoot: " + cellToRightRoot);
+                    maze.union(cellToRight, randomCell);
                     drawWall(xCoordinate, yCoordinate, randomWall, g);
                     break;
                 case 3:
                     int cellBelowRoot = maze.find(cellBelow);
-                    maze.union(cellBelowRoot, randomCell);
+                    if (randomCellRoot == cellBelowRoot) {
+                        break;
+                    }
+                    System.out.println("cellBelowRoot: " + cellBelowRoot);
+                    maze.union(cellBelow, randomCell);
                     drawWall(xCoordinate, yCoordinate, randomWall, g);
                     break;
             }
         }
 
-    }
-
-    private int getRandomCell(int[] cellArray) {
-        random = new Random();
-        ArrayList<Integer> rootCell = new ArrayList<>();
-        for (int i = 0; i < cellArray.length; i++) {
-            if (cellArray[i] == -1) {
-                rootCell.add(i);
-            }
-        }
-        System.out.println("root cell: " + rootCell);
-        if (rootCell.isEmpty()) {
-            return -1;
-        }
-        int randomCellIndex = rootCell.get(random.nextInt(rootCell.toArray().length));
-        System.out.println("random cell index: " + randomCellIndex);
-        System.out.println("Value of index: " + cellArray[randomCellIndex]);
-        return randomCellIndex;
     }
 
     // Paints the interior of the cell at postion x,y with colour c
