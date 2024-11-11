@@ -38,13 +38,8 @@ public class DisjunctSets {
     }
 
     public boolean allConnected() {
-        int root = find(0); // Find the root of the first element
-        for (int i = 1; i < cellArray.length; i++) {
-            if (find(i) != root) {
-                return false; // If any element has a different root, they are not all connected
-            }
-        }
-        return true; // All elements have the same root
+        int root = cellArray[find(0)]; // Find the root of the first element
+        return root == -cellArray.length;
     }
 }
 
