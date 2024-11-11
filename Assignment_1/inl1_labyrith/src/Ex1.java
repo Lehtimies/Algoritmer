@@ -17,7 +17,7 @@ public class Ex1 {
     private static final int WIDTH = 500;  // Size of the window in pixels
     private static final int HEIGHT = 500;
 
-    static int cells=50;    // The size of the maze is cells*cells (default is 20*20)
+    static int cells=100;    // The size of the maze is cells*cells (default is 20*20)
 
     public static void main(String[] args) {
 
@@ -92,6 +92,9 @@ class MazeComponent extends JComponent {
     }
 
     private void createMaze (int cells, Graphics g) {
+        // Runtime counter
+        long startTime = System.currentTimeMillis();
+
         random = new Random();
         int totalCells = cells * cells;
 
@@ -103,6 +106,7 @@ class MazeComponent extends JComponent {
             int randomCell = random.nextInt(mazeArray.length);
             int randomCellRoot = maze.find(randomCell);
 
+            /*
             // DEBUGGING
             System.out.println(Arrays.toString(mazeArray));
             System.out.println("randomCell: " + randomCell);
@@ -116,6 +120,7 @@ class MazeComponent extends JComponent {
                 }
             }
             System.out.println("RootCellArray: " + rootCell);
+            */
 
             // End process once everything is in one disjunctSet
             if (maze.allConnected()) {
@@ -129,23 +134,27 @@ class MazeComponent extends JComponent {
             int cellAbove = randomCell - cells;
             int cellBelow = randomCell + cells;
 
+            /*
             // DEBUGGING
             System.out.println("Cell to left: " + cellToLeft);
             System.out.println("Cell to right: " + cellToRight);
             System.out.println("Cell Above: " + cellAbove);
             System.out.println("Cell Below: " + cellBelow);
+            */
 
             // Get random wall (number between 0-3); 0 left, 1 up, 2 right, 3 down
             int randomWall = random.nextInt(4);
-            System.out.println("randomWall: " + randomWall); // DEBUGGING
+            //System.out.println("randomWall: " + randomWall); // DEBUGGING
 
             // Check if cell is outer cell and wall is outer wall
             int xCoordinate = randomCell % cells;
             int yCoordinate = randomCell / cells;
 
+            /*
             // DEBUGGING
             System.out.println("x-coordinate: " + xCoordinate);
             System.out.println("y-coordinate: " + yCoordinate);
+            */
 
             // If outer wall then flip the wall to be removed
             if (xCoordinate == 0 && randomWall == 0) {
@@ -164,14 +173,14 @@ class MazeComponent extends JComponent {
             /* Select adjacent cell based on wall direction
             If the selected cell and adjacent cell have the same root then break out of the switch case
             and choose a new random cell */
-            System.out.println("random wall (before switch case): " + randomWall);
+            //System.out.println("random wall (before switch case): " + randomWall);
             switch (randomWall) {
                 case 0:
                     int cellToLeftRoot = maze.find(cellToLeft);
                     if (randomCellRoot == cellToLeftRoot) {
                         break;
                     }
-                    System.out.println("cellToLeftRoot: " + cellToLeftRoot);
+                    //System.out.println("cellToLeftRoot: " + cellToLeftRoot);
                     maze.union(cellToLeftRoot, randomCellRoot);
                     drawWall(xCoordinate, yCoordinate, randomWall, g);
                     break;
@@ -180,7 +189,7 @@ class MazeComponent extends JComponent {
                     if (randomCellRoot == cellAboveRoot) {
                         break;
                     }
-                    System.out.println("cellAboveRoot: " + cellAboveRoot);
+                    //System.out.println("cellAboveRoot: " + cellAboveRoot);
                     maze.union(cellAboveRoot, randomCellRoot);
                     drawWall(xCoordinate, yCoordinate, randomWall, g);
                     break;
@@ -189,7 +198,7 @@ class MazeComponent extends JComponent {
                     if (randomCellRoot == cellToRightRoot) {
                         break;
                     }
-                    System.out.println("cellToRightRoot: " + cellToRightRoot);
+                    //System.out.println("cellToRightRoot: " + cellToRightRoot);
                     maze.union(cellToRight, randomCell);
                     drawWall(xCoordinate, yCoordinate, randomWall, g);
                     break;
@@ -198,12 +207,17 @@ class MazeComponent extends JComponent {
                     if (randomCellRoot == cellBelowRoot) {
                         break;
                     }
-                    System.out.println("cellBelowRoot: " + cellBelowRoot);
+                    //System.out.println("cellBelowRoot: " + cellBelowRoot);
                     maze.union(cellBelow, randomCell);
                     drawWall(xCoordinate, yCoordinate, randomWall, g);
                     break;
             }
         }
+
+        // End of runtime and print time
+        long endTime = System.currentTimeMillis();
+        long runTime = endTime - startTime;
+        System.out.println("Maze creation runtime: " + runTime + " ms");
 
     }
 
