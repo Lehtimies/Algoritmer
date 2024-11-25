@@ -1,7 +1,6 @@
 import java.util.*;
 import java.io.*;
 import javax.swing.*;
-import java.awt.event.*;
 
 public class Ex2 {
     public static void main(String[] args) throws IOException, FileFormatException, CycleFound {
@@ -98,23 +97,7 @@ public class Ex2 {
         System.out.println("Run topSort");
         graph.topSort();
         System.out.println("------------");
-        System.out.println("Debug:");
-        int i = 0;
-        while (i < graph.getNodes().size()) {
-            for (Node node : graph.getNodes()) {
-                if (node.getTopNum() == i) {
-                    System.out.println(node.getName() + " index: " + i);
-                    i++;
-                    break;
-                }
-            }
-        }
-        for (Node node : graph.getNodes()) {
-            System.out.println("Node name: " + node.getName() + " index: " + node.getTopNum());
-        }
-        for (Node[] edge : graph.getEdges()) {
-            System.out.println("Edges: " + edge[0].getName() + " " + edge[1].getName());
-        }
+        //graph.debug();
     }
 
 }
@@ -128,6 +111,9 @@ class FileFormatException extends Exception { //Input file has the wrong format
 
 }
 
+/**
+ * Class for handling graphs
+ */
 class Graphs {
     private ArrayList<Node> nodes;
     private ArrayList<Node[]> edges;
@@ -163,20 +149,28 @@ class Graphs {
     }
 
     public void topSort() throws CycleFound {
-        Node v;
+        Node node;
+        ArrayList<String> sortedNodesNames = new ArrayList<>();
         for (int counter = 0; counter < nodes.size(); counter++) {
-            v = findNewVertexOfIndegreeZero();
-            if ( v == null )
+            node = findNewVertexOfIndegreeZero();
+            if ( node == null )
                 throw new CycleFound();
-            v.setIncomingConnections(-1);
-            v.topNum(counter);
-            for (Node w : v.getConnections()) {
-                int newIncomingConnections = w.getIncomingConnections() - 1;
-                w.setIncomingConnections(newIncomingConnections);
+            node.setIncomingConnections(-1);
+            node.setIndex(counter);
+            sortedNodesNames.add(node.getName());
+            for (Node adjacentNode : node.getConnections()) {
+                int newIncomingConnections = adjacentNode.getIncomingConnections() - 1;
+                adjacentNode.setIncomingConnections(newIncomingConnections);
             }
         }
+        // Print out the sorted nodes
+        System.out.println("Sorted Nodes: " + sortedNodesNames);
     }
 
+    /**
+     * Finds a new node with indegree zero (no incoming connections)
+     * @return Node
+     */
     private Node findNewVertexOfIndegreeZero() {
         for (Node node : nodes) {
             if (node.getIncomingConnections() == 0) {
@@ -184,6 +178,29 @@ class Graphs {
             }
         }
         return null;
+    }
+
+    /**
+     * Debug method for graphs, prints out the nodes + indexes and edges to check that everything got added and handled correctly
+     */
+    public void debug() {
+        System.out.println("Debug:");
+        int i = 0;
+        while (i < nodes.size()) {
+            for (Node node : nodes) {
+                if (node.getIndex() == i) {
+                    System.out.println(node.getName() + " index: " + i);
+                    i++;
+                    break;
+                }
+            }
+        }
+        for (Node node : nodes) {
+            System.out.println("Node name: " + node.getName() + " index: " + node.getIndex());
+        }
+        for (Node[] edge : edges) {
+            System.out.println("Edges: " + edge[0].getName() + " " + edge[1].getName());
+        }
     }
 }
 
@@ -226,15 +243,18 @@ class Node {
         this.incomingConnections = incomingConnections;
     }
 
-    public void topNum(int index) {
+    public void setIndex(int index) {
         this.index = index;
     }
 
-    public int getTopNum() {
+    public int getIndex() {
         return index;
     }
 }
 
+/**
+ * Exception for when a cycle is found in the graph
+ */
 class CycleFound extends Throwable {
     public CycleFound() {
         super("Cycle found in graph");
