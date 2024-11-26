@@ -40,6 +40,8 @@ public class Ex2 {
                         for (String n:nodeNames) {
                             System.out.println(n.trim() );   // Trim and print the node name
                             // Here you should create a node in the graph
+
+                            // Create a new node with the name n and an empty list of connections
                             Node node = new Node(n.trim(), new ArrayList<Node>());
                             graph.addNode(node);
                         }
@@ -61,15 +63,21 @@ public class Ex2 {
             if (line.trim().length() > 0) {  // Skip empty lines
                 try {
                     String[] edges=line.split(",");           // Edges are comma separated pairs e1:e2
-                    ArrayList<Node> nodeList = graph.getNodes();
+                    ArrayList<Node> nodeList = graph.getNodes();    // Get the list of nodes in the graph
 
                     for (String e:edges) {       // For all edges
                         String[] edgePair = e.trim().split(":"); //Split edge components v1:v2
                         System.out.println (edgePair[0].trim() + " " + edgePair[1].trim() );
                         // Here you should create an edge in the graph
+
+                        // Initialize two nodes to null, these will be used to reference the nodes in the nodeList
                         Node node1 = null;
                         Node node2 = null;
+                        // For each node in the nodeList from the graph, check if the node name matches the edge name
                         for (Node node : nodeList) {
+                            // If the node name matches the edge name, make the edge node reference the node in question
+                            // This is done so that the connections that later get added to the edge node also get added
+                            // to the node in the nodeList of the graph
                             if (node.getName().equals(edgePair[0].trim())) {
                                 node1 = node;
                             }
@@ -77,6 +85,7 @@ public class Ex2 {
                                 node2 = node;
                             }
                         }
+                        // If both nodes are found, add the connection between them
                         if (node1 != null && node2 != null) {
                             node1.addConnection(node2);
                             node2.setIncomingConnections(node2.getIncomingConnections() + 1);
@@ -95,9 +104,9 @@ public class Ex2 {
         r.close();  // Close the reader
         System.out.println("------------");
         System.out.println("Run topSort");
-        graph.topSort();
+        graph.topSort(); // Sort the graph
         System.out.println("------------");
-        //graph.debug();
+        //graph.debugGraph(); // Check that everything got added to the graph correctly
     }
 
 }
@@ -118,19 +127,35 @@ class Graphs {
     private ArrayList<Node> nodes;
     private ArrayList<Node[]> edges;
 
+    /**
+     * Constructor for Graphs
+     */
     public Graphs() {
         nodes = new ArrayList<Node>();
         edges = new ArrayList<Node[]>();
     }
 
+    /**
+     * Add a node to the graph
+     * @param node Node to add
+     */
     public void addNode(Node node) {
         nodes.add(node);
     }
 
+    /**
+     * Add an edge to the graph
+     * @param v1 Node 1
+     * @param v2 Node 2
+     */
     public void addEdge(Node v1, Node v2) {
         Node[] edge = {v1, v2};
         edges.add(edge);
     }
+
+    /*
+     * Setters and getters
+    */
 
     public void setNodes(ArrayList<Node> nodes) {
         this.nodes = nodes;
@@ -148,20 +173,43 @@ class Graphs {
         return edges;
     }
 
+    /**
+     * Topological sort of the graph
+     * @throws CycleFound if a cycle is found in the graph
+     */
     public void topSort() throws CycleFound {
         Node node;
-        ArrayList<String> sortedNodesNames = new ArrayList<>();
+        ArrayList<String> sortedNodesNames = new ArrayList<>(); // List of sorted nodes, names only
         for (int counter = 0; counter < nodes.size(); counter++) {
+            // Find a node with no incoming connections
             node = findNewVertexOfIndegreeZero();
+            // If no such node exists, a cycle is found
             if ( node == null )
                 throw new CycleFound();
+            // Set the incoming connections to -1 to remove it from consideration,
+            // then set the index to the current count and add it to the end of the sorted list
             node.setIncomingConnections(-1);
             node.setIndex(counter);
             sortedNodesNames.add(node.getName());
+            // Remove the connections from the node to its adjacent nodes
             for (Node adjacentNode : node.getConnections()) {
                 int newIncomingConnections = adjacentNode.getIncomingConnections() - 1;
                 adjacentNode.setIncomingConnections(newIncomingConnections);
             }
+
+            /* UNCOMMENT FOR DEBUGGING!
+
+            // DEBUG
+            // Print out the nodes and their incoming connections after each iteration
+            // This is to check that the incoming connections are removed correctly and that the correct nodes
+            // are being selected to be handled next, i.e. the nodes with no incoming connections in the order of the nodeList
+            // In short, if multiple nodes have no incoming connections, the first one in the nodeList should be selected
+            ArrayList<String> connections = new ArrayList<>();
+            for (Node nodeCheck : nodes) {
+                connections.add(nodeCheck.getName() + " " + nodeCheck.getIncomingConnections());
+            }
+            System.out.println("City + incoming connections: " + connections);
+            */
         }
         // Print out the sorted nodes
         System.out.println("Sorted Nodes: " + sortedNodesNames);
@@ -169,7 +217,7 @@ class Graphs {
 
     /**
      * Finds a new node with indegree zero (no incoming connections)
-     * @return Node
+     * @return Node with indegree zero, or null if no such node exists
      */
     private Node findNewVertexOfIndegreeZero() {
         for (Node node : nodes) {
@@ -183,7 +231,7 @@ class Graphs {
     /**
      * Debug method for graphs, prints out the nodes + indexes and edges to check that everything got added and handled correctly
      */
-    public void debug() {
+    public void debugGraph() {
         System.out.println("Debug:");
         int i = 0;
         while (i < nodes.size()) {
@@ -204,15 +252,51 @@ class Graphs {
     }
 }
 
+/**
+ * Class for nodes in the graph
+ */
 class Node {
     private String name;
     private ArrayList<Node> connections;
     private int incomingConnections = 0;
     private int index = -1;
 
+    /**
+     * Constructor for Node class
+     * @param nodeName Name of the node
+     * @param connectionList List of connections to other nodes
+     */
     public Node(String nodeName, ArrayList<Node> connectionList) {
         this.name = nodeName;
         this.connections = connectionList;
+    }
+
+    /**
+     * Add a connection to the node
+     * @param connectingNode Node to connect to this node
+     */
+    public void addConnection(Node connectingNode) {
+        connections.add(connectingNode);
+    }
+
+    /*
+     * Setters and getters
+    */
+
+    public void setConnections(ArrayList<Node> connectionList) {
+        this.connections = connectionList;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setIncomingConnections(int incomingConnections) {
+        this.incomingConnections = incomingConnections;
+    }
+
+    public void setIndex(int index) {
+        this.index = index;
     }
 
     public String getName() {
@@ -223,28 +307,8 @@ class Node {
         return connections;
     }
 
-    public void setConnections(ArrayList<Node> connectionList) {
-        this.connections = connectionList;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void addConnection(Node connection) {
-        connections.add(connection);
-    }
-
     public int getIncomingConnections() {
         return incomingConnections;
-    }
-
-    public void setIncomingConnections(int incomingConnections) {
-        this.incomingConnections = incomingConnections;
-    }
-
-    public void setIndex(int index) {
-        this.index = index;
     }
 
     public int getIndex() {
